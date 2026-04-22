@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel Editable - Cotización de Monedas</title>
+  <style>
+    /* Reset simple */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f9f9f9;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header, footer {
+      background-color: #004d99;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      flex: 1;
+      max-width: 600px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    }
+    h1 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.8rem;
+    }
+    form {
+      display: grid;
+      gap: 1rem;
+    }
+    label {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    input[type="number"] {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover, button:focus {
+      background-color: #005fa3;
+      outline: none;
+    }
+    .info {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .icon {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
+    /* Responsive */
+    @media (max-width: 480px) {
+      main {
+        margin: 1rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      <img src="https://cdn-icons-png.flaticon.com/512/197/197386.png" alt="Icono Real Brasileño" class="icon" aria-hidden="true" />
+      Panel Editable - Cotización Monedas
+    </h1>
+  </header>
+  <main>
+    <form id="cotizacionForm" aria-label="Formulario para actualizar cotización de monedas">
+      <!-- Real Brasileño -->
+      <label for="realValor">
+        <img src="https://cdn-icons-png.flaticon.com/512/197/197386.png" alt="" class="icon" aria-hidden="true" />
+        Real Brasileño (BRL) a Bolívares:
+      </label>
+      <input type="number" id="realValor" name="realValor" min="0" step="0.01" required aria-describedby="realHelp" />
+      <small id="realHelp">Ingrese el valor actual de 1 Real Brasileño en Bolívares.</small>
+
+      <!-- Dólar -->
+      <label for="dolarValor">
+        <img src="https://cdn-icons-png.flaticon.com/512/197/197484.png" alt="" class="icon" aria-hidden="true" />
+        Dólar (USD) a Bolívares:
+      </label>
+      <input type="number" id="dolarValor" name="dolarValor" min="0" step="0.01" required aria-describedby="dolarHelp" />
+      <small id="dolarHelp">Ingrese el valor actual de 1 Dólar en Bolívares.</small>
+
+      <!-- Euro -->
+      <label for="euroValor">
+        <img src="https://cdn-icons-png.flaticon.com/512/197/197593.png" alt="" class="icon" aria-hidden="true" />
+        Euro (EUR) a Bolívares:
+      </label>
+      <input type="number" id="euroValor" name="euroValor" min="0" step="0.01" required aria-describedby="euroHelp" />
+      <small id="euroHelp">Ingrese el valor actual de 1 Euro en Bolívares.</small>
+
+      <button type="submit" aria-live="polite" aria-label="Guardar cotizaciones">Guardar Cotizaciones</button>
+
+      <div class="info" aria-live="polite" aria-atomic="true" id="statusMessage" role="status"></div>
+    </form>
+
+    <section aria-label="Información adicional">
+      <h2>Información al día</h2>
+      <p id="fechaActual" aria-live="polite"></p>
+    </section>
+  </main>
+  <footer>
+    <p>© Estamos fritos.com</p>
+  </footer>
+
+  <script>
+    // Función para formatear fecha en formato día, mes, año
+    function actualizarFecha() {
+      const fecha = new Date();
+      const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+      const fechaFormateada = fecha.toLocaleDateString('es-ES', opciones);
+      document.getElementById('fechaActual').textContent = `Fecha actual: ${fechaFormateada}`;
+    }
+
+    // Cargar valores previos de localStorage si existen
+    function cargarValores() {
+      const real = localStorage.getItem('cotizacion_real');
+      const dolar = localStorage.getItem('cotizacion_dolar');
+      const euro = localStorage.getItem('cotizacion_euro');
+
+      if (real) document.getElementById('realValor').value = real;
+      if (dolar) document.getElementById('dolarValor').value = dolar;
+      if (euro) document.getElementById('euroValor').value = euro;
+    }
+
+    // Guardar valores en localStorage y notificar
+    function guardarValores(event) {
+      event.preventDefault();
+      const real = parseFloat(document.getElementById('realValor').value);
+      const dolar = parseFloat(document.getElementById('dolarValor').value);
+      const euro = parseFloat(document.getElementById('euroValor').value);
+
+      if (isNaN(real) || real <= 0 || isNaN(dolar) || dolar <= 0 || isNaN(euro) || euro <= 0) {
+        mostrarMensaje('Por favor, ingrese valores válidos y mayores que cero.');
+        return;
+      }
+
+      localStorage.setItem('cotizacion_real', real.toFixed(2));
+      localStorage.setItem('cotizacion_dolar', dolar.toFixed(2));
+      localStorage.setItem('cotizacion_euro', euro.toFixed(2));
+
+      // Guardar fecha de actualización
+      localStorage.setItem('fecha_actualizacion', new Date().toISOString());
+
+      mostrarMensaje('Cotizaciones guardadas correctamente.');
+
+      // Disparar evento custom para comunicar a otras pestañas (función 1)
+      window.dispatchEvent(new CustomEvent('cotizacionesActualizadas'));
+    }
+
+    // Mostrar mensaje en statusMessage
+    function mostrarMensaje(mensaje) {
+      const status = document.getElementById('statusMessage');
+      status.textContent = mensaje;
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    }
+
+    // Función 2: Escuchar cambios en localStorage para sincronizar si se abre en otra pestaña
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'cotizacion_real' || e.key === 'cotizacion_dolar' || e.key === 'cotizacion_euro') {
+        cargarValores();
+        mostrarMensaje('Cotizaciones actualizadas desde otra pestaña.');
+      }
+    });
+
+    // Función 3: Actualizar fecha automáticamente cada día a medianoche
+    function programarActualizacionFecha() {
+      const ahora = new Date();
+      const siguienteDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1);
+      const msParaMedianoche = siguienteDia - ahora;
+      setTimeout(() => {
+        actualizarFecha();
+        programarActualizacionFecha();
+      }, msParaMedianoche);
+    }
+
+    // Función 4: Restablecer valores a defaults (opcional)
+    function resetCotizaciones() {
+      if (confirm('¿Seguro que deseas restablecer las cotizaciones a valores predeterminados?')) {
+        localStorage.removeItem('cotizacion_real');
+        localStorage.removeItem('cotizacion_dolar');
+        localStorage.removeItem('cotizacion_euro');
+        localStorage.removeItem('fecha_actualizacion');
+        cargarValores();
+        mostrarMensaje('Cotizaciones restablecidas.');
+      }
+    }
+
+    // Función 5: Validar inputs para evitar números negativos o cero en tiempo real
+    function validarInput(e) {
+      const val = parseFloat(e.target.value);
+      if (val <= 0) {
+        e.target.setCustomValidity('El valor debe ser mayor que cero');
+      } else {
+        e.target.setCustomValidity('');
+      }
+    }
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+      actualizarFecha();
+      programarActualizacionFecha();
+      cargarValores();
+
+      // Eventos
+      document.getElementById('cotizacionForm').addEventListener('submit', guardarValores);
+      ['realValor', 'dolarValor', 'euroValor'].forEach(id => {
+        document.getElementById(id).addEventListener('input', validarInput);
+      });
+    });
+  </script>
+</body>
+</html>

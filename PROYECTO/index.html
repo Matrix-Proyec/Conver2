@@ -1,0 +1,260 @@
+<!--
+Archivo: usuario.html
+Página para usuario que muestra la cotización actualizada de Real Brasileño, Dólar y Euro en Bolívares.
+Se comunica con editable.html a través de localStorage para reflejar los valores actuales.
+-->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usuario - Cotización Monedas</title>
+  <style>
+    /* Reset básico */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      background: #fff;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header, footer {
+      background-color: #007acc;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      flex: 1;
+      max-width: 700px;
+      margin: 2rem auto;
+      background: #eef6fc;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 3px 10px rgb(0 0 0 / 0.1);
+    }
+    h1 {
+      font-weight: 700;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.9rem;
+    }
+    section {
+      margin-top: 1.5rem;
+    }
+    .moneda {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      background: white;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgb(0 0 0 / 0.07);
+    }
+    .icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+    .detalle {
+      font-size: 1.2rem;
+    }
+    .valor {
+      font-weight: 700;
+      color: #004a99;
+    }
+    .fecha {
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+    .mensaje {
+      color: #aa0000;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    /* Responsive */
+    @media (max-width: 480px) {
+      main {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      .moneda {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .icon {
+        width: 28px;
+        height: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      <img src="https://cdn-icons-png.flaticon.com/512/197/197484.png" alt="Icono Dólar" class="icon" aria-hidden="true" />
+      Cotización Actual de Monedas en Bolívares
+    </h1>
+  </header>
+  <main>
+    <section aria-label="Cotización Real Brasileño">
+      <div class="moneda" role="region" aria-live="polite" aria-atomic="true" aria-label="Cotización de Real Brasileño">
+        <img src="https://cdn-icons-png.flaticon.com/512/197/197386.png" alt="Icono Real Brasileño" class="icon" />
+        <div class="detalle">
+          Real Brasileño (BRL):
+          <span class="valor" id="valorReal">Cargando...</span> Bs
+        </div>
+      </div>
+    </section>
+    <section aria-label="Cotización Dólar">
+      <div class="moneda" role="region" aria-live="polite" aria-atomic="true" aria-label="Cotización de Dólar">
+        <img src="https://cdn-icons-png.flaticon.com/512/197/197484.png" alt="Icono Dólar" class="icon" />
+        <div class="detalle">
+          Dólar (USD):
+          <span class="valor" id="valorDolar">Cargando...</span> Bs
+        </div>
+      </div>
+    </section>
+    <section aria-label="Cotización Euro">
+      <div class="moneda" role="region" aria-live="polite" aria-atomic="true" aria-label="Cotización de Euro">
+        <img src="https://cdn-icons-png.flaticon.com/512/197/197593.png" alt="Icono Euro" class="icon" />
+        <div class="detalle">
+          Euro (EUR):
+          <span class="valor" id="valorEuro">Cargando...</span> Bs
+        </div>
+      </div>
+    </section>
+
+    <p class="fecha" id="fechaActualizacion" aria-live="polite" aria-atomic="true">Fecha de última actualización: Cargando...</p>
+    <p id="mensajeError" class="mensaje" role="alert" aria-live="assertive" style="display:none;"></p>
+  </main>
+  <footer>
+    <p>© Estamos fritos.com</p>
+  </footer>
+
+  <script>
+    // Función para mostrar la fecha en formato día, mes, año
+    function formatearFecha(fechaISO) {
+      if (!fechaISO) return 'Desconocida';
+      const fecha = new Date(fechaISO);
+      if (isNaN(fecha)) return 'Desconocida';
+      const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+      return fecha.toLocaleDateString('es-ES', opciones);
+    }
+
+    // Función para cargar valores desde localStorage
+    function cargarValores() {
+      const real = localStorage.getItem('cotizacion_real');
+      const dolar = localStorage.getItem('cotizacion_dolar');
+      const euro = localStorage.getItem('cotizacion_euro');
+      const fecha = localStorage.getItem('fecha_actualizacion');
+
+      const errorMsg = document.getElementById('mensajeError');
+      errorMsg.style.display = 'none';
+      errorMsg.textContent = '';
+
+      if (real && dolar && euro) {
+        document.getElementById('valorReal').textContent = Number(real).toFixed(2);
+        document.getElementById('valorDolar').textContent = Number(dolar).toFixed(2);
+        document.getElementById('valorEuro').textContent = Number(euro).toFixed(2);
+        document.getElementById('fechaActualizacion').textContent =
+          'Fecha de última actualización: ' + formatearFecha(fecha);
+      } else {
+        // Si no hay datos en localStorage, mostrar mensaje de error
+        document.getElementById('valorReal').textContent = 'N/A';
+        document.getElementById('valorDolar').textContent = 'N/A';
+        document.getElementById('valorEuro').textContent = 'N/A';
+        document.getElementById('fechaActualizacion').textContent = 'Fecha de última actualización: Desconocida';
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = 'No se encontraron cotizaciones. Por favor, el administrador debe actualizar los valores.';
+      }
+    }
+
+    // Función 1: Escuchar cambios en localStorage para actualizar valores en tiempo real
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'cotizacion_real' || e.key === 'cotizacion_dolar' || e.key === 'cotizacion_euro' || e.key === 'fecha_actualizacion') {
+        cargarValores();
+      }
+    });
+
+    // Función 2: Escuchar evento custom (por si está en la misma pestaña)
+    window.addEventListener('cotizacionesActualizadas', () => {
+      cargarValores();
+    });
+
+    // Función 3: Auto refrescar cada 5 minutos para mantener datos actualizados en caso de cambio externo
+    setInterval(() => {
+      cargarValores();
+    }, 5 * 60 * 1000);
+
+        // Función 4: Mostrar alerta si los valores son muy altos o bajos para alertar posible error
+    function verificarValoresExtremos() {
+      const real = parseFloat(localStorage.getItem('cotizacion_real'));
+      const dolar = parseFloat(localStorage.getItem('cotizacion_dolar'));
+      const euro = parseFloat(localStorage.getItem('cotizacion_euro'));
+      const mensaje = document.getElementById('mensajeError');
+
+      let alertas = [];
+
+      if (!isNaN(real)) {
+        if (real < 10) alertas.push('El valor del Real Brasileño parece muy bajo.');
+        else if (real > 1000000) alertas.push('El valor del Real Brasileño parece muy alto.');
+      }
+      if (!isNaN(dolar)) {
+        if (dolar < 50) alertas.push('El valor del Dólar parece muy bajo.');
+        else if (dolar > 5000000) alertas.push('El valor del Dólar parece muy alto.');
+      }
+      if (!isNaN(euro)) {
+        if (euro < 50) alertas.push('El valor del Euro parece muy bajo.');
+        else if (euro > 5000000) alertas.push('El valor del Euro parece muy alto.');
+      }
+
+      if (alertas.length > 0) {
+        mensaje.style.display = 'block';
+        mensaje.textContent = alertas.join(' ');
+      } else {
+        mensaje.style.display = 'none';
+        mensaje.textContent = '';
+      }
+    }
+
+    // Función 5: Mostrar mensaje de bienvenida con fecha y hora actualizada
+    function mostrarMensajeBienvenida() {
+      const ahora = new Date();
+      const opciones = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      const horaFormateada = ahora.toLocaleTimeString('es-ES', opciones);
+      const mensaje = document.createElement('p');
+      mensaje.style.fontSize = '0.9rem';
+      mensaje.style.color = '#007acc';
+      mensaje.style.marginTop = '1rem';
+      mensaje.textContent = `Bienvenido! Hora actual: ${horaFormateada}`;
+      document.querySelector('main').prepend(mensaje);
+
+      // Actualizar cada 60 segundos
+      setInterval(() => {
+        const ahora = new Date();
+        const horaFormateada = ahora.toLocaleTimeString('es-ES', opciones);
+        mensaje.textContent = `Bienvenido! Hora actual: ${horaFormateada}`;
+      }, 60000);
+    }
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarValores();
+      verificarValoresExtremos();
+      mostrarMensajeBienvenida();
+    });
+    
+    </script>
+    </body>
+    </HTML>
